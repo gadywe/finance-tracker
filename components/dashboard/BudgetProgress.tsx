@@ -61,7 +61,7 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
         const groupEntries = periodBudget.filter((b) => b.group === group)
         const groupBudgeted = groupEntries.reduce((s, b) => s + b.amount, 0)
         const groupActual = groupEntries.reduce((s, b) => {
-          return s + periodExpenses.filter((e) => e.category === b.category).reduce((a, e) => a + e.amount, 0)
+          return s + periodExpenses.filter((e) => e.category.trim() === b.category.trim()).reduce((a, e) => a + e.amount, 0)
         }, 0)
         const groupRatio = groupBudgeted > 0 ? groupActual / groupBudgeted : 0
         const groupIsOver = groupActual > groupBudgeted
@@ -96,7 +96,7 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
                 {groupEntries.map(({ category, amount: budgeted }) => {
                   const cat = EXPENSE_CATEGORIES.find((c) => c.value === category)
                   const actual = periodExpenses
-                    .filter((e) => e.category === category)
+                    .filter((e) => e.category.trim() === category.trim())
                     .reduce((s, e) => s + e.amount, 0)
                   const ratio = budgeted > 0 ? actual / budgeted : 0
                   const isOver = actual > budgeted

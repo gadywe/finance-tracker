@@ -27,7 +27,7 @@ export default function Dashboard({ activeTab, incomeJobs, expenses, goals, onRe
   const yearExpenses = expenses.filter((e) => new Date(e.date).getFullYear() === currentYear)
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <main className={`max-w-5xl mx-auto px-4 space-y-6 ${activeTab === 'expenses' ? 'pt-2 pb-6' : 'py-6'}`}>
       {activeTab === 'summary' && (
         <>
           <FinancialSummary incomeJobs={incomeJobs} expenses={yearExpenses} />

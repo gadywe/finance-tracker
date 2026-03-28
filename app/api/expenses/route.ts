@@ -6,6 +6,14 @@ export const revalidate = 60
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
+
+    // ?categories=1 — מחזיר קטגוריות ייחודיות לצורך דיבוג
+    if (searchParams.get('categories') === '1') {
+      const all = await getExpenses()
+      const unique = [...new Set(all.map((e) => e.category).filter(Boolean))].sort()
+      return NextResponse.json(unique)
+    }
+
     const yearParam = searchParams.get('year')
     const monthParam = searchParams.get('month')
     const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear()
