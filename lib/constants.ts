@@ -14,6 +14,7 @@ export const INCOME_TYPES = [
   { value: 'נוירוטיב',                label: '🌐 נוירוטיב',                  color: '#34D399' },
   { value: 'יצירה אישית',             label: '🎨 יצירה אישית',               color: '#FB923C' },
   { value: 'סדנאות',                  label: '🎓 סדנאות',                    color: '#E879F9' },
+  { value: 'כללי',                    label: '📌 כללי',                       color: '#64748B' },
 ]
 
 export const EXPENSE_CATEGORIES = [
