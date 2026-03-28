@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Expense } from '@/lib/types'
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '@/lib/constants'
+import { useState, useEffect, useRef } from 'react'
+import { Expense, BudgetEntry } from '@/lib/types'
+import { PAYMENT_METHODS } from '@/lib/constants'
 
 interface Props {
   expense?: Expense
@@ -15,7 +15,8 @@ const today = () => new Date().toISOString().split('T')[0]
 export default function ExpenseForm({ expense, onSuccess, onClose }: Props) {
   const [form, setForm] = useState({
     date:          expense?.date          ?? today(),
-    category:      expense?.category      ?? EXPENSE_CATEGORIES[0].value,
+    category:      expense?.category      ?? '',
+    group:         expense?.group         ?? '',
     description:   expense?.description   ?? '',
     amount:        expense?.amount        ?? '',
     paymentMethod: expense?.paymentMethod ?? 'מזומן',
@@ -23,11 +24,54 @@ export default function ExpenseForm({ expense, onSuccess, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // autocomplete
+  const [catQuery, setCatQuery] = useState(expense?.category ?? '')
+  const [budgetCategories, setBudgetCategories] = useState<{ category: string; group: string }[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/budget')
+      .then((r) => r.json())
+      .then((data: BudgetEntry[]) => {
+        if (!Array.isArray(data)) return
+        const seen = new Set<string>()
+        const unique = data
+          .filter((b) => { if (seen.has(b.category)) return false; seen.add(b.category); return true })
+          .map((b) => ({ category: b.category, group: b.group }))
+          .sort((a, b) => a.category.localeCompare(b.category, 'he'))
+        setBudgetCategories(unique)
+      })
+      .catch(() => {})
+  }, [])
+
+  const suggestions = catQuery.trim()
+    ? budgetCategories.filter((b) => b.category.includes(catQuery.trim()))
+    : budgetCategories
+
+  function selectCategory(b: { category: string; group: string }) {
+    setCatQuery(b.category)
+    setForm((f) => ({ ...f, category: b.category, group: b.group }))
+    setShowDropdown(false)
+  }
+
+  function handleCatInput(val: string) {
+    setCatQuery(val)
+    setForm((f) => ({ ...f, category: val, group: '' }))
+    setShowDropdown(true)
+  }
+
+  function handleCatBlur() {
+    // delay כדי לאפשר click על אפשרות לפני סגירה
+    setTimeout(() => setShowDropdown(false), 150)
+  }
+
   const set = (k: string, v: string | number) => setForm((f) => ({ ...f, [k]: v }))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.description || !form.amount) { setError('נא למלא תיאור וסכום'); return }
+    if (!form.category || !form.amount) { setError('נא למלא קטגוריה וסכום'); return }
     setLoading(true)
     setError('')
     try {
@@ -51,8 +95,6 @@ export default function ExpenseForm({ expense, onSuccess, onClose }: Props) {
     borderRadius: 8, color: 'var(--text)', fontSize: 16,
   }
 
-  const selectedCat = EXPENSE_CATEGORIES.find((c) => c.value === form.category)
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
       <div
@@ -68,17 +110,55 @@ export default function ExpenseForm({ expense, onSuccess, onClose }: Props) {
             <input style={inputStyle} type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
           </div>
 
-          <div>
+          {/* autocomplete קטגוריה */}
+          <div style={{ position: 'relative' }}>
             <label className="text-sm" style={{ color: 'var(--muted)' }}>קטגוריה</label>
-            <select
-              style={{ ...inputStyle, color: selectedCat?.color ?? 'var(--text)' }}
-              value={form.category}
-              onChange={(e) => set('category', e.target.value)}
-            >
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.icon} {c.value}</option>
-              ))}
-            </select>
+            <input
+              ref={inputRef}
+              style={inputStyle}
+              value={catQuery}
+              onChange={(e) => handleCatInput(e.target.value)}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={handleCatBlur}
+              placeholder="חפש קטגוריה או הקלד חופשי..."
+              autoComplete="off"
+            />
+            {form.group ? (
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>סוג: {form.group}</p>
+            ) : catQuery ? (
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>קטגוריה חופשית</p>
+            ) : null}
+
+            {showDropdown && suggestions.length > 0 && (
+              <div
+                ref={dropdownRef}
+                style={{
+                  position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 100,
+                  background: 'var(--bg2)', border: '1px solid var(--border)',
+                  borderRadius: 8, marginTop: 2, maxHeight: 200, overflowY: 'auto',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                }}
+              >
+                {suggestions.map((b) => (
+                  <button
+                    key={b.category}
+                    type="button"
+                    onMouseDown={() => selectCategory(b)}
+                    style={{
+                      width: '100%', padding: '0.5rem 0.75rem', background: 'none',
+                      border: 'none', cursor: 'pointer', textAlign: 'right',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      borderBottom: '1px solid var(--border)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg3)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                  >
+                    <span style={{ color: 'var(--text)', fontSize: 14 }}>{b.category}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 11 }}>{b.group}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

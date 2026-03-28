@@ -20,7 +20,8 @@ export interface Goal {
 export interface Expense {
   id: string
   date: string         // YYYY-MM-DD
-  category: string
+  category: string     // קטגוריה ספציפית (שכירות, ארנונה, ...)
+  group: string        // סוג כולל (בית, חוץ, ...) — עמודה H בגיליון הזנה
   description: string
   amount: number
   paymentMethod: 'מזומן' | 'אשראי' | 'ביט'

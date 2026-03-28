@@ -39,10 +39,12 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
     )
   }
 
-  // הוצאות בפועל לתקופה — עמודה E בגיליון "הזנה" מכילה את הסוג (group)
   const periodExpenses = periodConfig
     ? expenses.filter((e) => periodConfig.months.includes(new Date(e.date).getMonth()))
     : []
+
+  // מיפוי קטגוריה ספציפית → סוג, מכל רשומות התקציב
+  const categoryToGroup = new Map(budget.map((b) => [b.category.trim(), b.group.trim()]))
 
   // סדר הקבוצות לפי הופעתן בגיליון
   const groups: string[] = []
@@ -62,9 +64,14 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
         const groupEntries = periodBudget.filter((b) => b.group === group)
         const groupBudgeted = groupEntries.reduce((s, b) => s + b.amount, 0)
 
-        // הוצאות בפועל: עמודה E = שם הסוג (group)
+        // הוצאות בפועל: expense.group (חדש) → נגזר ממיפוי תקציב → fallback: category=group (ישן)
         const groupActual = periodExpenses
-          .filter((e) => e.category.trim() === group.trim())
+          .filter((e) => {
+            const expGroup = e.group?.trim()
+              || categoryToGroup.get(e.category.trim())
+              || e.category.trim()
+            return expGroup === group.trim()
+          })
           .reduce((s, e) => s + e.amount, 0)
 
         const groupRatio = groupBudgeted > 0 ? groupActual / groupBudgeted : 0
