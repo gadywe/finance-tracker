@@ -6,7 +6,7 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!
 const INCOME_SHEET = 'הכנסות'
 const EXPENSES_SHEET = 'הזנה'
 const GOALS_SHEET = 'יעדים'
-const BUDGET_SHEET = 'תכנון'
+const BUDGET_SHEET = 'תכנון-אפליקציה'
 
 function getAuth() {
   return new google.auth.GoogleAuth({
