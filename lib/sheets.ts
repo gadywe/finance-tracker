@@ -365,8 +365,8 @@ export const getBudget = unstable_cache(
     const entries: BudgetEntry[] = []
     let currentGroup = ''
     for (const row of rows) {
-      const groupOrEmpty = row[0] ?? ''
-      const category = row[1] ?? ''
+      const category = row[0] ?? ''
+      const groupOrEmpty = row[1] ?? ''
       if (groupOrEmpty) currentGroup = groupOrEmpty
       if (!category) continue
       BUDGET_PERIODS.forEach((period, i) => {
