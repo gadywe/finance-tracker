@@ -98,7 +98,7 @@ export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJo
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
-  revalidateTag('income-jobs')
+  revalidateTag('income-jobs', 'max')
   return { id, ...job }
 }
 
@@ -124,7 +124,7 @@ async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Prom
       ],
     },
   })
-  revalidateTag('income-jobs')
+  revalidateTag('income-jobs', 'max')
 }
 
 export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): Promise<void> {
@@ -143,7 +143,7 @@ export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): 
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
-  revalidateTag('income-jobs')
+  revalidateTag('income-jobs', 'max')
 }
 
 export async function deleteIncomeJob(id: string): Promise<void> {
@@ -158,7 +158,7 @@ export async function deleteIncomeJob(id: string): Promise<void> {
     spreadsheetId: SPREADSHEET_ID,
     range: `${INCOME_SHEET}!A${rowNum}:I${rowNum}`,
   })
-  revalidateTag('income-jobs')
+  revalidateTag('income-jobs', 'max')
 }
 
 // ─── הוצאות ───────────────────────────────────────────────
@@ -227,7 +227,7 @@ export async function addExpense(expense: Omit<Expense, 'id'>): Promise<Expense>
   const updatedRange = appendRes.data.updates?.updatedRange ?? ''
   const match = updatedRange.match(/(\d+)$/)
   const rowNum = match ? parseInt(match[1], 10) : Date.now()
-  revalidateTag('expenses')
+  revalidateTag('expenses', 'max')
   return { id: `row-${rowNum}`, ...expense }
 }
 
@@ -252,7 +252,7 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
     valueInputOption: 'RAW',
     requestBody: { values: [[merged.date, 'הוצאה', merged.amount, 'הוצאה', merged.category, merged.description, merged.paymentMethod]] },
   })
-  revalidateTag('expenses')
+  revalidateTag('expenses', 'max')
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -262,5 +262,5 @@ export async function deleteExpense(id: string): Promise<void> {
     spreadsheetId: SPREADSHEET_ID,
     range: `${EXPENSES_SHEET}!A${rowNum}:G${rowNum}`,
   })
-  revalidateTag('expenses')
+  revalidateTag('expenses', 'max')
 }
