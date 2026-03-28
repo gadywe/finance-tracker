@@ -1,11 +1,12 @@
 import { google } from 'googleapis'
 import { unstable_cache, revalidateTag } from 'next/cache'
-import { IncomeJob, Expense, Goal } from './types'
+import { IncomeJob, Expense, Goal, BudgetEntry } from './types'
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!
 const INCOME_SHEET = 'הכנסות'
 const EXPENSES_SHEET = 'הזנה'
 const GOALS_SHEET = 'יעדים'
+const BUDGET_SHEET = 'תכנון'
 
 function getAuth() {
   return new google.auth.GoogleAuth({
@@ -337,3 +338,31 @@ export async function setGoals(goals: Goal[]): Promise<void> {
   }
   revalidateTag('goals', 'max')
 }
+
+// ─── תכנון (תקציב דו-חודשי) ──────────────────────────────
+// לשונית "תכנון": A=קטגוריה | B=ינו-פבר | C=מרץ-אפר | D=מאי-יונ | E=יול-אוג | F=ספט-אוק | G=נוב-דצמ
+
+const BUDGET_PERIODS = ['ינו-פבר', 'מרץ-אפר', 'מאי-יונ', 'יול-אוג', 'ספט-אוק', 'נוב-דצמ']
+
+export const getBudget = unstable_cache(
+  async (): Promise<BudgetEntry[]> => {
+    const sheets = await getSheets()
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${BUDGET_SHEET}!A2:G`,
+    })
+    const rows = res.data.values ?? []
+    const entries: BudgetEntry[] = []
+    for (const row of rows) {
+      const category = row[0]
+      if (!category) continue
+      BUDGET_PERIODS.forEach((period, i) => {
+        const amount = parseAmount(row[i + 1])
+        if (amount > 0) entries.push({ category, period, amount })
+      })
+    }
+    return entries
+  },
+  ['budget'],
+  { revalidate: 300, tags: ['budget'] },
+)

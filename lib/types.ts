@@ -25,3 +25,9 @@ export interface Expense {
   amount: number
   paymentMethod: 'מזומן' | 'אשראי' | 'ביט'
 }
+
+export interface BudgetEntry {
+  category: string
+  period: string   // matches BI_MONTHLY_PERIODS label, e.g. 'מרץ-אפר'
+  amount: number
+}
