@@ -63,7 +63,7 @@ async function getIncomeFromHazana(): Promise<IncomeJob[]> {
       const rawType = row[3] as string
       const type: IncomeJob['type'] = VALID_INCOME_TYPES.includes(rawType as IncomeJob['type'])
         ? (rawType as IncomeJob['type'])
-        : 'הצגה'
+        : 'משחק'
       const rawOwner = row[7] as string
       return {
         id: `hazana-row-${sheetRowNum}`,
