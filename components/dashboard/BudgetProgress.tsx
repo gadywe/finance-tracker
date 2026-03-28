@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Expense, BudgetEntry } from '@/lib/types'
-import { EXPENSE_CATEGORIES, BI_MONTHLY_PERIODS } from '@/lib/constants'
+import { BI_MONTHLY_PERIODS } from '@/lib/constants'
 
 interface Props {
   expenses: Expense[]
@@ -39,11 +39,12 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
     )
   }
 
+  // הוצאות בפועל לתקופה — עמודה E בגיליון "הזנה" מכילה את הסוג (group)
   const periodExpenses = periodConfig
     ? expenses.filter((e) => periodConfig.months.includes(new Date(e.date).getMonth()))
     : []
 
-  // קיבוץ לפי group, שמירה על סדר ההופעה מהגיליון
+  // סדר הקבוצות לפי הופעתן בגיליון
   const groups: string[] = []
   for (const entry of periodBudget) {
     if (!groups.includes(entry.group)) groups.push(entry.group)
@@ -60,26 +61,29 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
       {groups.map((group) => {
         const groupEntries = periodBudget.filter((b) => b.group === group)
         const groupBudgeted = groupEntries.reduce((s, b) => s + b.amount, 0)
-        const groupActual = groupEntries.reduce((s, b) => {
-          return s + periodExpenses.filter((e) => e.category.trim() === b.category.trim()).reduce((a, e) => a + e.amount, 0)
-        }, 0)
+
+        // הוצאות בפועל: עמודה E = שם הסוג (group)
+        const groupActual = periodExpenses
+          .filter((e) => e.category.trim() === group.trim())
+          .reduce((s, e) => s + e.amount, 0)
+
         const groupRatio = groupBudgeted > 0 ? groupActual / groupBudgeted : 0
         const groupIsOver = groupActual > groupBudgeted
         const isOpen = !collapsed[group]
 
         return (
           <div key={group}>
-            {/* כותרת קבוצה */}
+            {/* כותרת קבוצה + progress bar */}
             <button
               onClick={() => toggle(group)}
-              style={{
-                width: '100%', background: 'none', border: 'none',
-                cursor: 'pointer', padding: 0, textAlign: 'right',
-              }}
+              style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'right' }}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span style={{ color: 'var(--muted)', fontSize: 11, transition: 'transform 0.2s', display: 'inline-block', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▼</span>
+                  <span style={{
+                    color: 'var(--muted)', fontSize: 11, display: 'inline-block',
+                    transition: 'transform 0.2s', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  }}>▼</span>
                   <span className="font-semibold text-sm">{group}</span>
                 </div>
                 <span style={{ fontSize: 13, color: groupIsOver ? '#FF5A5A' : 'var(--text)' }}>
@@ -88,35 +92,25 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
                 </span>
               </div>
               <ProgressBar ratio={groupRatio} height={10} />
+              {groupIsOver && (
+                <p style={{ fontSize: 11, color: '#FF5A5A', marginTop: 2, textAlign: 'right' }}>
+                  חריגה של ₪{(groupActual - groupBudgeted).toLocaleString()}
+                </p>
+              )}
             </button>
 
-            {/* פירוט קטגוריות */}
+            {/* פירוט תכנון לפי קטגוריה (ללא ביצוע — רזולוציה לא קיימת בגיליון) */}
             {isOpen && (
-              <div className="space-y-2.5 mt-3 pr-3" style={{ borderRight: '2px solid var(--border)' }}>
+              <div className="mt-2.5 pr-3 space-y-1" style={{ borderRight: '2px solid var(--border)' }}>
                 {groupEntries.map(({ category, amount: budgeted }) => {
-                  const cat = EXPENSE_CATEGORIES.find((c) => c.value === category)
-                  const actual = periodExpenses
-                    .filter((e) => e.category.trim() === category.trim())
-                    .reduce((s, e) => s + e.amount, 0)
-                  const ratio = budgeted > 0 ? actual / budgeted : 0
-                  const isOver = actual > budgeted
-
+                  const pct = groupBudgeted > 0 ? (budgeted / groupBudgeted) * 100 : 0
                   return (
-                    <div key={category}>
-                      <div className="flex justify-between mb-1" style={{ fontSize: 13 }}>
-                        <span style={{ color: 'var(--text)' }}>
-                          {cat?.icon ?? '📦'} {category}
-                        </span>
-                        <span style={{ color: isOver ? '#FF5A5A' : 'var(--muted)' }}>
-                          ₪{actual.toLocaleString()} / ₪{budgeted.toLocaleString()}
-                        </span>
-                      </div>
-                      <ProgressBar ratio={ratio} height={7} />
-                      {isOver && (
-                        <p style={{ fontSize: 11, color: '#FF5A5A', marginTop: 2 }}>
-                          חריגה ₪{(actual - budgeted).toLocaleString()}
-                        </p>
-                      )}
+                    <div key={category} className="flex justify-between items-center" style={{ fontSize: 12 }}>
+                      <span style={{ color: 'var(--muted)' }}>{category}</span>
+                      <span style={{ color: 'var(--muted)' }}>
+                        ₪{budgeted.toLocaleString()}
+                        <span style={{ marginRight: 4, opacity: 0.6 }}>({Math.round(pct)}%)</span>
+                      </span>
                     </div>
                   )
                 })}
