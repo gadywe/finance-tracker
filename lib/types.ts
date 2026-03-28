@@ -10,6 +10,13 @@ export interface IncomeJob {
   owner: 'גדי' | 'שרון' | 'כללי'
 }
 
+export interface Goal {
+  owner: 'גדי' | 'שרון' | 'כללי'
+  period: 'שנתי' | 'Q1' | 'Q2' | 'Q3' | 'Q4'
+  year: number
+  amount: number
+}
+
 export interface Expense {
   id: string
   date: string         // YYYY-MM-DD

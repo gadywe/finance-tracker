@@ -1,10 +1,11 @@
 import { google } from 'googleapis'
 import { unstable_cache, revalidateTag } from 'next/cache'
-import { IncomeJob, Expense } from './types'
+import { IncomeJob, Expense, Goal } from './types'
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!
 const INCOME_SHEET = 'הכנסות'
 const EXPENSES_SHEET = 'הזנה'
+const GOALS_SHEET = 'יעדים'
 
 function getAuth() {
   return new google.auth.GoogleAuth({
@@ -263,4 +264,76 @@ export async function deleteExpense(id: string): Promise<void> {
     range: `${EXPENSES_SHEET}!A${rowNum}:G${rowNum}`,
   })
   revalidateTag('expenses', 'max')
+}
+
+// ─── יעדים ───────────────────────────────────────────────
+// לשונית "יעדים": A: owner | B: period | C: year | D: amount
+
+const VALID_OWNERS = ['גדי', 'שרון', 'כללי']
+const VALID_PERIODS = ['שנתי', 'Q1', 'Q2', 'Q3', 'Q4']
+
+export const getGoals = unstable_cache(
+  async (year: number): Promise<Goal[]> => {
+    const sheets = await getSheets()
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${GOALS_SHEET}!A2:D`,
+    })
+    const rows = res.data.values ?? []
+    return rows
+      .filter((r) => VALID_OWNERS.includes(r[0]) && VALID_PERIODS.includes(r[1]) && Number(r[2]) === year)
+      .map((r) => ({
+        owner: r[0] as Goal['owner'],
+        period: r[1] as Goal['period'],
+        year: Number(r[2]),
+        amount: Number(r[3]) || 0,
+      }))
+  },
+  ['goals'],
+  { revalidate: 60, tags: ['goals'] },
+)
+
+// שומר מערך יעדים — מעדכן שורות קיימות ומוסיף חדשות
+export async function setGoals(goals: Goal[]): Promise<void> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${GOALS_SHEET}!A2:D`,
+  })
+  const rows = res.data.values ?? []
+
+  // מפה של owner|period|year → מספר שורה (1-based, +2 לכותרת)
+  const rowMap = new Map<string, number>()
+  rows.forEach((r, i) => {
+    if (r[0] && r[1] && r[2]) rowMap.set(`${r[0]}|${r[1]}|${r[2]}`, i + 2)
+  })
+
+  const updates: { range: string; values: (string | number)[][] }[] = []
+  const appends: (string | number)[][] = []
+
+  for (const g of goals) {
+    const key = `${g.owner}|${g.period}|${g.year}`
+    const rowNum = rowMap.get(key)
+    if (rowNum !== undefined) {
+      updates.push({ range: `${GOALS_SHEET}!A${rowNum}:D${rowNum}`, values: [[g.owner, g.period, g.year, g.amount]] })
+    } else {
+      appends.push([g.owner, g.period, g.year, g.amount])
+    }
+  }
+
+  if (updates.length > 0) {
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: { valueInputOption: 'RAW', data: updates },
+    })
+  }
+  if (appends.length > 0) {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${GOALS_SHEET}!A:D`,
+      valueInputOption: 'RAW',
+      requestBody: { values: appends },
+    })
+  }
+  revalidateTag('goals', 'max')
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { IncomeJob, Expense } from '@/lib/types'
+import { IncomeJob, Expense, Goal } from '@/lib/types'
 import Dashboard from '@/components/dashboard/Dashboard'
 
 type Tab = 'summary' | 'income' | 'expenses'
@@ -15,18 +15,22 @@ const TABS: { id: Tab; label: string }[] = [
 export default function Home() {
   const [incomeJobs, setIncomeJobs] = useState<IncomeJob[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('summary')
 
   const fetchAll = useCallback(async () => {
     try {
-      const [incRes, expRes] = await Promise.all([
+      const year = new Date().getFullYear()
+      const [incRes, expRes, goalsRes] = await Promise.all([
         fetch('/api/income'),
         fetch('/api/expenses'),
+        fetch(`/api/goals?year=${year}`),
       ])
-      const [inc, exp] = await Promise.all([incRes.json(), expRes.json()])
+      const [inc, exp, gls] = await Promise.all([incRes.json(), expRes.json(), goalsRes.json()])
       setIncomeJobs(Array.isArray(inc) ? inc : [])
       setExpenses(Array.isArray(exp) ? exp : [])
+      setGoals(Array.isArray(gls) ? gls : [])
     } catch (err) {
       console.error('Failed to fetch data:', err)
     } finally {
@@ -84,6 +88,7 @@ export default function Home() {
           activeTab={activeTab}
           incomeJobs={incomeJobs}
           expenses={expenses}
+          goals={goals}
           onRefresh={fetchAll}
         />
       )}
