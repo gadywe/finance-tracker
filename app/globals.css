@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --bg:      #080810;
+  --bg2:     #0f0f1e;
+  --bg3:     #141428;
+  --border:  #1e1e38;
+  --text:    #e2e2f0;
+  --muted:   #5a5a7a;
+  --income:  #3DDBD9;
+  --expense: #FF5A5A;
+  --profit:  #06D6A0;
+  --warning: #FFD166;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  direction: rtl;
+  min-height: 100vh;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+/* מונע zoom ב-iOS */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* מסיר חצים מ-number input */
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--income);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
