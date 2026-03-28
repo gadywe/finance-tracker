@@ -177,7 +177,7 @@ function rowNumFromId(id: string): number {
 
 function parseAmount(raw: string | undefined): number {
   if (!raw) return 0
-  return Number(String(raw).replace(/,/g, '')) || 0
+  return Number(String(raw).replace(/[₪,\s]/g, '')) || 0
 }
 
 export const getExpenses = unstable_cache(
@@ -343,6 +343,16 @@ export async function setGoals(goals: Goal[]): Promise<void> {
 // לשונית "תכנון": A=קטגוריה | B=ינו-פבר | C=מרץ-אפר | D=מאי-יונ | E=יול-אוג | F=ספט-אוק | G=נוב-דצמ
 
 const BUDGET_PERIODS = ['ינו-פבר', 'מרץ-אפר', 'מאי-יונ', 'יול-אוג', 'ספט-אוק', 'נוב-דצמ']
+
+// מחזיר שורות גולמיות מהגיליון — לצורך דיבוג בלבד (/api/budget?raw=1)
+export async function getBudgetRaw(): Promise<{ rowIndex: number; cells: string[] }[]> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${BUDGET_SHEET}!A1:H`,
+  })
+  return (res.data.values ?? []).map((row, i) => ({ rowIndex: i + 1, cells: row }))
+}
 
 export const getBudget = unstable_cache(
   async (): Promise<BudgetEntry[]> => {
