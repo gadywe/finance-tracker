@@ -72,6 +72,18 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* כפתור הוספה */}
+      <button
+        onClick={() => { setEditExpense(undefined); setShowForm(true) }}
+        style={{
+          width: '100%', background: 'var(--expense)', color: '#fff', border: 'none',
+          borderRadius: 10, padding: '0.75rem', fontWeight: 700,
+          cursor: 'pointer', minHeight: 48, fontSize: 15,
+        }}
+      >
+        + הוצאה חדשה
+      </button>
+
       {/* בורר תקופה דו-חודשית */}
       <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)' }} className="rounded-xl p-3">
         <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>תקופה דו-חודשית</p>
@@ -136,31 +148,19 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
       {/* ביצוע מול יעד לפי קטגוריה */}
       <BudgetProgress expenses={expenses} budget={budget} period={selectedPeriod.label} />
 
-      {/* בחירת חודש + כפתור הוספה */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ color: 'var(--muted)' }}>חודש:</label>
-          <select
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(Number(e.target.value))}
-            style={{
-              background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8,
-              color: 'var(--text)', padding: '0.4rem 0.75rem', fontSize: 14,
-            }}
-          >
-            {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
-          </select>
-        </div>
-        <button
-          onClick={() => { setEditExpense(undefined); setShowForm(true) }}
+      {/* בחירת חודש */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm" style={{ color: 'var(--muted)' }}>חודש:</label>
+        <select
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(Number(e.target.value))}
           style={{
-            background: 'var(--expense)', color: '#fff', border: 'none',
-            borderRadius: 10, padding: '0.5rem 1.25rem', fontWeight: 700,
-            cursor: 'pointer', minHeight: 44, fontSize: 14,
+            background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8,
+            color: 'var(--text)', padding: '0.4rem 0.75rem', fontSize: 14,
           }}
         >
-          + הוצאה חדשה
-        </button>
+          {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+        </select>
       </div>
 
       <ExpenseList expenses={monthExpenses} onEdit={openEdit} onDelete={handleDelete} />
