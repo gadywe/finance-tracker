@@ -27,6 +27,7 @@ export interface Expense {
 }
 
 export interface BudgetEntry {
+  group: string    // e.g. 'בית', 'חינוך ותרבות'
   category: string
   period: string   // matches BI_MONTHLY_PERIODS label, e.g. 'מרץ-אפר'
   amount: number

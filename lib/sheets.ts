@@ -349,16 +349,19 @@ export const getBudget = unstable_cache(
     const sheets = await getSheets()
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${BUDGET_SHEET}!A2:G`,
+      range: `${BUDGET_SHEET}!A2:H`,
     })
     const rows = res.data.values ?? []
     const entries: BudgetEntry[] = []
+    let currentGroup = ''
     for (const row of rows) {
-      const category = row[0]
+      const groupOrEmpty = row[0] ?? ''
+      const category = row[1] ?? ''
+      if (groupOrEmpty) currentGroup = groupOrEmpty
       if (!category) continue
       BUDGET_PERIODS.forEach((period, i) => {
-        const amount = parseAmount(row[i + 1])
-        if (amount > 0) entries.push({ category, period, amount })
+        const amount = parseAmount(row[i + 2])
+        if (amount > 0) entries.push({ group: currentGroup, category, period, amount })
       })
     }
     return entries
