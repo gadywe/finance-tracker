@@ -25,7 +25,7 @@ function ProgressBar({ ratio, height = 8 }: { ratio: number; height?: number }) 
 }
 
 export default function BudgetProgress({ expenses, budget, period }: Props) {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const periodConfig = BI_MONTHLY_PERIODS.find((p) => p.label === period)
   const periodBudget = budget.filter((b) => b.period === period)
@@ -53,7 +53,7 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
   }
 
   function toggle(group: string) {
-    setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }))
+    setExpanded((prev) => ({ ...prev, [group]: !prev[group] }))
   }
 
   return (
@@ -76,7 +76,7 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
 
         const groupRatio = groupBudgeted > 0 ? groupActual / groupBudgeted : 0
         const groupIsOver = groupActual > groupBudgeted
-        const isOpen = !collapsed[group]
+        const isOpen = !!expanded[group]
 
         return (
           <div key={group}>
