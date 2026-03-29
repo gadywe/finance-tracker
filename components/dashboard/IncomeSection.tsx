@@ -81,7 +81,7 @@ export default function IncomeSection({ incomeJobs, onRefresh }: Props) {
       </div>
 
       {/* פירוט לפי סוג */}
-      <TypeBreakdown incomeJobs={incomeJobs} />
+      <TypeBreakdown incomeJobs={incomeJobs} onEdit={openEdit} onEditHazana={setHazanaEditJob} />
 
       {/* רשימה + כפתור הוספה */}
       <div className="flex items-center justify-between">
