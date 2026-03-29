@@ -212,8 +212,8 @@ export const getExpenses = unstable_cache(
         return {
           id: `row-${sheetRowNum}`,
           date: row[0] ?? '',
-          category: row[4] ?? '',
-          group: (row[3] && row[3] !== 'הוצאה') ? row[3] : (row[7] ?? ''),
+          category: row[3] ?? '',
+          group: row[4] ?? '',
           description: row[5] ?? '',
           amount: parseAmount(row[2]),
           paymentMethod: (row[6] ?? 'מזומן') as Expense['paymentMethod'],
@@ -236,11 +236,11 @@ export const getExpenses = unstable_cache(
 
 export async function addExpense(expense: Omit<Expense, 'id'>): Promise<Expense> {
   const sheets = await getSheets()
-  // A: תאריך | B: סוג תנועה | C: סכום | D: סוג | E: קטגוריה | F: תיאור | G: אמצעי תשלום | H: סוג (group)
-  const row = [expense.date, 'הוצאה', expense.amount, 'הוצאה', expense.category, expense.description, expense.paymentMethod, expense.group ?? '']
+  // A: תאריך | B: סוג תנועה | C: סכום | D: קטגוריה ספציפית | E: סוג (group) | F: תיאור | G: אמצעי תשלום
+  const row = [expense.date, 'הוצאה', expense.amount, expense.category, expense.group ?? '', expense.description, expense.paymentMethod]
   const appendRes = await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${EXPENSES_SHEET}!A:H`,
+    range: `${EXPENSES_SHEET}!A:G`,
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
@@ -262,16 +262,16 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
   const merged = {
     date:          updates.date          ?? r[0] ?? '',
     amount:        updates.amount        ?? parseAmount(r[2]),
-    category:      updates.category      ?? r[4] ?? '',
-    group:         updates.group         ?? r[7] ?? '',
+    category:      updates.category      ?? r[3] ?? '',
+    group:         updates.group         ?? r[4] ?? '',
     description:   updates.description   ?? r[5] ?? '',
     paymentMethod: updates.paymentMethod ?? r[6] ?? 'מזומן',
   }
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${EXPENSES_SHEET}!A${rowNum}:H${rowNum}`,
+    range: `${EXPENSES_SHEET}!A${rowNum}:G${rowNum}`,
     valueInputOption: 'RAW',
-    requestBody: { values: [[merged.date, 'הוצאה', merged.amount, 'הוצאה', merged.category, merged.description, merged.paymentMethod, merged.group]] },
+    requestBody: { values: [[merged.date, 'הוצאה', merged.amount, merged.category, merged.group, merged.description, merged.paymentMethod]] },
   })
   revalidateTag('expenses', 'max')
 }
