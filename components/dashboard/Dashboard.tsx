@@ -30,7 +30,7 @@ export default function Dashboard({ activeTab, incomeJobs, expenses, goals, onRe
     <main className={`max-w-5xl mx-auto px-4 space-y-6 ${activeTab === 'expenses' ? 'pt-2 pb-6' : 'py-6'}`}>
       {activeTab === 'summary' && (
         <>
-          <FinancialSummary incomeJobs={incomeJobs} expenses={yearExpenses} />
+          <FinancialSummary incomeJobs={incomeJobs} expenses={yearExpenses} goals={goals} />
 
           {/* התקדמות לפי בעלים */}
           <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--bg2)', border: '1px solid var(--border)' }}>
@@ -60,7 +60,7 @@ export default function Dashboard({ activeTab, incomeJobs, expenses, goals, onRe
       )}
 
       {activeTab === 'income' && (
-        <IncomeSection incomeJobs={incomeJobs} onRefresh={onRefresh} />
+        <IncomeSection incomeJobs={incomeJobs} goals={goals} onRefresh={onRefresh} />
       )}
 
       {activeTab === 'expenses' && (

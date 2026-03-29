@@ -1,4 +1,4 @@
-import { IncomeJob, Expense } from '@/lib/types'
+import { IncomeJob, Expense, Goal } from '@/lib/types'
 import { ANNUAL_INCOME_GOAL } from '@/lib/constants'
 import ProgressRing from './ProgressRing'
 import NetProfitCard from './NetProfitCard'
@@ -6,13 +6,15 @@ import NetProfitCard from './NetProfitCard'
 interface Props {
   incomeJobs: IncomeJob[]
   expenses: Expense[]
+  goals: Goal[]
 }
 
-export default function FinancialSummary({ incomeJobs, expenses }: Props) {
+export default function FinancialSummary({ incomeJobs, expenses, goals }: Props) {
   const totalIncome = incomeJobs.reduce((s, j) => s + j.amount, 0)
   const paidIncome = incomeJobs.filter((j) => j.status === 'paid').reduce((s, j) => s + j.amount, 0)
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
-  const incomePct = Math.min((totalIncome / ANNUAL_INCOME_GOAL) * 100, 100)
+  const annualGoal = goals.filter((g) => g.period === 'שנתי').reduce((s, g) => s + g.amount, 0) || ANNUAL_INCOME_GOAL
+  const incomePct = Math.min((totalIncome / annualGoal) * 100, 100)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -25,7 +27,7 @@ export default function FinancialSummary({ incomeJobs, expenses }: Props) {
           </ProgressRing>
           <div>
             <p className="text-2xl font-bold" style={{ color: 'var(--income)' }}>₪{totalIncome.toLocaleString()}</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>יעד: ₪{ANNUAL_INCOME_GOAL.toLocaleString()}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>יעד: ₪{annualGoal.toLocaleString()}</p>
             <p className="text-xs" style={{ color: 'var(--profit)' }}>שולם: ₪{paidIncome.toLocaleString()}</p>
           </div>
         </div>
