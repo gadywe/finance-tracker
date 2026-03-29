@@ -196,7 +196,7 @@ export const getExpenses = unstable_cache(
           id: `row-${sheetRowNum}`,
           date: row[0] ?? '',
           category: row[4] ?? '',
-          group: row[7] ?? '',
+          group: (row[3] && row[3] !== 'הוצאה') ? row[3] : (row[7] ?? ''),
           description: row[5] ?? '',
           amount: parseAmount(row[2]),
           paymentMethod: (row[6] ?? 'מזומן') as Expense['paymentMethod'],
