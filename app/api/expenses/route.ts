@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getExpenses, addExpense } from '@/lib/sheets'
+import { getExpenses, getExpensesRaw, addExpense } from '@/lib/sheets'
 
 export const revalidate = 60
 
@@ -12,6 +12,12 @@ export async function GET(request: Request) {
       const all = await getExpenses()
       const unique = [...new Set(all.map((e) => e.category).filter(Boolean))].sort()
       return NextResponse.json(unique)
+    }
+
+    // ?debug=1 — מחזיר 5 שורות ראשונות עם כל העמודות הגולמיות
+    if (searchParams.get('debug') === '1') {
+      const raw = await getExpensesRaw()
+      return NextResponse.json(raw)
     }
 
     const yearParam = searchParams.get('year')

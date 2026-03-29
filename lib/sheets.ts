@@ -180,6 +180,23 @@ function parseAmount(raw: string | undefined): number {
   return Number(String(raw).replace(/[₪,\s]/g, '')) || 0
 }
 
+// מחזיר 5 שורות הוצאה ראשונות עם כל העמודות — לצורך דיבוג (/api/expenses?debug=1)
+export async function getExpensesRaw(): Promise<{ row: number; cols: Record<string, string> }[]> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${EXPENSES_SHEET}!A2:H`,
+  })
+  const rows = res.data.values ?? []
+  return rows
+    .filter((row) => row[0] && row[1] === 'הוצאה')
+    .slice(0, 5)
+    .map((row, i) => ({
+      row: i + 2,
+      cols: { A: row[0], B: row[1], C: row[2], D: row[3], E: row[4], F: row[5], G: row[6], H: row[7] },
+    }))
+}
+
 export const getExpenses = unstable_cache(
   async (year?: number, month?: number): Promise<Expense[]> => {
     const sheets = await getSheets()
