@@ -25,7 +25,7 @@ async function getSheets() {
 
 // ─── הכנסות ───────────────────────────────────────────────
 
-const VALID_INCOME_TYPES: IncomeJob['type'][] = ['משחק', 'כתיבת מחזות ותסריטים', 'סימולציות', 'תמ"י', 'התא האפור', 'עסק פיתוח מוח', 'כתיבת אירועים', 'בימוי', 'עריכת תסריט', 'נוירוטיב', 'יצירה אישית', 'סדנאות']
+const VALID_INCOME_TYPES: IncomeJob['type'][] = ['משחק', 'כתיבת מחזות ותסריטים', 'סימולציות', 'תמ"י', 'התא האפור', 'עסק פיתוח מוח', 'כתיבת אירועים', 'בימוי', 'עריכת תסריט', 'נוירוטיב', 'יצירה אישית', 'סדנאות', 'כללי']
 
 async function getManualIncomeJobs(): Promise<IncomeJob[]> {
   const sheets = await getSheets()
@@ -115,16 +115,18 @@ async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Prom
   const r = res.data.values?.[0] ?? []
   const newType = updates.type ?? r[3] ?? ''
   const newOwner = updates.owner ?? ((['גדי', 'שרון', 'כללי'].includes(r[7]) ? r[7] : 'כללי') as IncomeJob['owner'])
-  // כותב type ל-D (index 3) ו-owner ל-H (index 7)
-  await sheets.spreadsheets.values.batchUpdate({
+  // כותב type ל-D ו-owner ל-H בשתי קריאות נפרדות
+  await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
-    requestBody: {
-      valueInputOption: 'RAW',
-      data: [
-        { range: `${EXPENSES_SHEET}!D${rowNum}`, values: [[newType]] },
-        { range: `${EXPENSES_SHEET}!H${rowNum}`, values: [[newOwner]] },
-      ],
-    },
+    range: `${EXPENSES_SHEET}!D${rowNum}`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [[newType]] },
+  })
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${EXPENSES_SHEET}!H${rowNum}`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [[newOwner]] },
   })
   revalidateTag('income-jobs', 'max')
 }
