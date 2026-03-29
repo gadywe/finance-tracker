@@ -6,8 +6,8 @@ import { INCOME_TYPES } from '@/lib/constants'
 
 interface Props {
   incomeJobs: IncomeJob[]
-  onEdit: (job: IncomeJob) => void
-  onEditHazana: (job: IncomeJob) => void
+  onEdit?: (job: IncomeJob) => void
+  onEditHazana?: (job: IncomeJob) => void
 }
 
 export default function TypeBreakdown({ incomeJobs, onEdit, onEditHazana }: Props) {
@@ -83,16 +83,18 @@ export default function TypeBreakdown({ incomeJobs, onEdit, onEditHazana }: Prop
                       >
                         {job.status === 'paid' ? 'שולם' : 'צפוי'}
                       </span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); job.id.startsWith('hazana-') ? onEditHazana(job) : onEdit(job) }}
-                        style={{
-                          background: 'var(--bg2)', border: '1px solid var(--border)',
-                          borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer',
-                          color: 'var(--muted)', fontSize: 12, flexShrink: 0,
-                        }}
-                      >
-                        עריכה
-                      </button>
+                      {(onEdit || onEditHazana) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); job.id.startsWith('hazana-') ? onEditHazana?.(job) : onEdit?.(job) }}
+                          style={{
+                            background: 'var(--bg2)', border: '1px solid var(--border)',
+                            borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer',
+                            color: 'var(--muted)', fontSize: 12, flexShrink: 0,
+                          }}
+                        >
+                          עריכה
+                        </button>
+                      )}
                     </div>
                   ))}
               </div>
