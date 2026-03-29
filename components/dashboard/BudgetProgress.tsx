@@ -106,18 +106,25 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
               )}
             </button>
 
-            {/* פירוט תכנון לפי קטגוריה (ללא ביצוע — רזולוציה לא קיימת בגיליון) */}
+            {/* פירוט ביצוע מול תקציב לפי קטגוריה */}
             {isOpen && (
-              <div className="mt-2.5 pr-3 space-y-1" style={{ borderRight: '2px solid var(--border)' }}>
+              <div className="mt-2.5 pr-3 space-y-2.5" style={{ borderRight: '2px solid var(--border)' }}>
                 {groupEntries.map(({ category, amount: budgeted }) => {
-                  const pct = groupBudgeted > 0 ? (budgeted / groupBudgeted) * 100 : 0
+                  const catActual = periodExpenses
+                    .filter((e) => e.category.trim() === category.trim())
+                    .reduce((s, e) => s + e.amount, 0)
+                  const catRatio = budgeted > 0 ? catActual / budgeted : 0
+                  const catIsOver = catActual > budgeted
                   return (
-                    <div key={category} className="flex justify-between items-center" style={{ fontSize: 12 }}>
-                      <span style={{ color: 'var(--muted)' }}>{category}</span>
-                      <span style={{ color: 'var(--muted)' }}>
-                        ₪{budgeted.toLocaleString()}
-                        <span style={{ marginRight: 4, opacity: 0.6 }}>({Math.round(pct)}%)</span>
-                      </span>
+                    <div key={category}>
+                      <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
+                        <span style={{ color: 'var(--muted)' }}>{category}</span>
+                        <span style={{ color: catIsOver ? '#FF5A5A' : 'var(--muted)' }}>
+                          ₪{catActual.toLocaleString()} / ₪{budgeted.toLocaleString()}
+                          <span style={{ marginRight: 4, opacity: 0.7 }}>({Math.round(catRatio * 100)}%)</span>
+                        </span>
+                      </div>
+                      <ProgressBar ratio={catRatio} height={5} />
                     </div>
                   )
                 })}
