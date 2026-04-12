@@ -128,6 +128,28 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
                     </div>
                   )
                 })}
+                {/* קטגוריות ללא תקציב שיש בהן הוצאה בפועל */}
+                {(() => {
+                  const budgetCats = new Set(groupEntries.map((e) => e.category.trim()))
+                  const byCategory = new Map<string, number>()
+                  periodExpenses
+                    .filter((e) => {
+                      const expGroup = e.group?.trim() || categoryToGroup.get(e.category.trim()) || e.category.trim()
+                      return expGroup === group.trim() && !budgetCats.has(e.category.trim())
+                    })
+                    .forEach((e) => byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + e.amount))
+                  return [...byCategory.entries()].map(([cat, actual]) => (
+                    <div key={cat}>
+                      <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
+                        <span style={{ color: 'var(--muted)' }}>{cat}</span>
+                        <span style={{ color: '#FF5A5A' }}>
+                          ₪{actual.toLocaleString()} / ללא תקציב
+                        </span>
+                      </div>
+                      <ProgressBar ratio={1} height={5} />
+                    </div>
+                  ))
+                })()}
               </div>
             )}
           </div>
