@@ -8,6 +8,7 @@ interface Props {
   expenses: Expense[]
   budget: BudgetEntry[]
   period: string
+  onCategoryClick?: (category: string, group: string) => void
 }
 
 function ProgressBar({ ratio, height = 8 }: { ratio: number; height?: number }) {
@@ -24,7 +25,7 @@ function ProgressBar({ ratio, height = 8 }: { ratio: number; height?: number }) 
   )
 }
 
-export default function BudgetProgress({ expenses, budget, period }: Props) {
+export default function BudgetProgress({ expenses, budget, period, onCategoryClick }: Props) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const periodConfig = BI_MONTHLY_PERIODS.find((p) => p.label === period)
@@ -118,7 +119,21 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
                   return (
                     <div key={category}>
                       <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
-                        <span style={{ color: 'var(--muted)' }}>{category}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ color: 'var(--muted)' }}>{category}</span>
+                          {catActual > 0 && onCategoryClick && (
+                            <button
+                              onClick={() => onCategoryClick(category, group)}
+                              style={{
+                                fontSize: 10, padding: '1px 6px', borderRadius: 5,
+                                border: '1px solid var(--border)', background: 'var(--bg3)',
+                                color: 'var(--muted)', cursor: 'pointer', lineHeight: 1.6,
+                              }}
+                            >
+                              פירוט
+                            </button>
+                          )}
+                        </div>
                         <span style={{ color: catIsOver ? '#FF5A5A' : 'var(--muted)' }}>
                           ₪{catActual.toLocaleString()} / ₪{budgeted.toLocaleString()}
                           <span style={{ marginRight: 4, opacity: 0.7 }}>({Math.round(catRatio * 100)}%)</span>
@@ -141,7 +156,21 @@ export default function BudgetProgress({ expenses, budget, period }: Props) {
                   return [...byCategory.entries()].map(([cat, actual]) => (
                     <div key={cat}>
                       <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
-                        <span style={{ color: 'var(--muted)' }}>{cat}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ color: 'var(--muted)' }}>{cat}</span>
+                          {onCategoryClick && (
+                            <button
+                              onClick={() => onCategoryClick(cat, group)}
+                              style={{
+                                fontSize: 10, padding: '1px 6px', borderRadius: 5,
+                                border: '1px solid var(--border)', background: 'var(--bg3)',
+                                color: 'var(--muted)', cursor: 'pointer', lineHeight: 1.6,
+                              }}
+                            >
+                              פירוט
+                            </button>
+                          )}
+                        </div>
                         <span style={{ color: '#FF5A5A' }}>
                           ₪{actual.toLocaleString()} / ללא תקציב
                         </span>

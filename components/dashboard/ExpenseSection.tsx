@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Expense, BudgetEntry } from '@/lib/types'
 import { BI_MONTHLY_PERIODS } from '@/lib/constants'
 import BudgetProgress from './BudgetProgress'
-import ExpenseList from '@/components/expenses/ExpenseList'
+import CategoryDrawer from './CategoryDrawer'
 import ExpenseForm from '@/components/expenses/ExpenseForm'
 
 interface Props {
@@ -18,14 +18,13 @@ function getCurrentPeriodIndex() {
   return idx >= 0 ? idx : 0
 }
 
-const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר']
 
 export default function ExpenseSection({ expenses, onRefresh }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editExpense, setEditExpense] = useState<Expense | undefined>()
-  const [filterMonth, setFilterMonth] = useState(new Date().getMonth())
   const [periodIndex, setPeriodIndex] = useState(getCurrentPeriodIndex)
   const [budget, setBudget] = useState<BudgetEntry[]>([])
+  const [drawer, setDrawer] = useState<{ category: string; group: string } | null>(null)
 
   const currentYear = new Date().getFullYear()
   const selectedPeriod = BI_MONTHLY_PERIODS[periodIndex]
@@ -49,18 +48,13 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
   const budgetRemaining = periodBudgetTotal - periodTotal
   const hasBudget = periodBudgetTotal > 0
 
-  // הוצאות לחודש הנבחר (לרשימה)
-  const monthExpenses = expenses.filter((e) => {
-    const d = new Date(e.date)
-    return d.getFullYear() === currentYear && d.getMonth() === filterMonth
-  })
-
   async function handleDelete(id: string) {
     await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
     onRefresh()
   }
 
   function openEdit(expense: Expense) {
+    setDrawer(null)
     setEditExpense(expense)
     setShowForm(true)
   }
@@ -69,6 +63,11 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
     setShowForm(false)
     setEditExpense(undefined)
   }
+
+  // הוצאות לתקופה שנבחרה — לדרואר
+  const drawerExpenses = drawer
+    ? periodExpenses.filter((e) => e.category.trim() === drawer.category.trim())
+    : []
 
   return (
     <div className="space-y-4">
@@ -146,24 +145,23 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
       </div>
 
       {/* ביצוע מול יעד לפי קטגוריה */}
-      <BudgetProgress expenses={expenses} budget={budget} period={selectedPeriod.label} />
+      <BudgetProgress
+        expenses={expenses}
+        budget={budget}
+        period={selectedPeriod.label}
+        onCategoryClick={(category, group) => setDrawer({ category, group })}
+      />
 
-      {/* בחירת חודש */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm" style={{ color: 'var(--muted)' }}>חודש:</label>
-        <select
-          value={filterMonth}
-          onChange={(e) => setFilterMonth(Number(e.target.value))}
-          style={{
-            background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8,
-            color: 'var(--text)', padding: '0.4rem 0.75rem', fontSize: 14,
-          }}
-        >
-          {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
-        </select>
-      </div>
-
-      <ExpenseList expenses={monthExpenses} onEdit={openEdit} onDelete={handleDelete} />
+      {drawer && (
+        <CategoryDrawer
+          category={drawer.category}
+          group={drawer.group}
+          expenses={drawerExpenses}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onClose={() => setDrawer(null)}
+        />
+      )}
 
       {showForm && (
         <ExpenseForm
