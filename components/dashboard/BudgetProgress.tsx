@@ -123,14 +123,15 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                           <span style={{ color: 'var(--muted)' }}>{category}</span>
                           {catActual > 0 && onCategoryClick && (
                             <button
-                              onClick={() => onCategoryClick(category, group)}
+                              onClick={(e) => { e.stopPropagation(); onCategoryClick(category, group) }}
                               style={{
-                                fontSize: 10, padding: '1px 6px', borderRadius: 5,
-                                border: '1px solid var(--border)', background: 'var(--bg3)',
-                                color: 'var(--muted)', cursor: 'pointer', lineHeight: 1.6,
+                                fontSize: 11, padding: '2px 8px', borderRadius: 6,
+                                border: '1px solid var(--income)', background: '#3DDBD915',
+                                color: 'var(--income)', cursor: 'pointer', lineHeight: 1.6,
+                                fontWeight: 500,
                               }}
                             >
-                              פירוט
+                              פירוט ›
                             </button>
                           )}
                         </div>
@@ -160,14 +161,15 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                           <span style={{ color: 'var(--muted)' }}>{cat}</span>
                           {onCategoryClick && (
                             <button
-                              onClick={() => onCategoryClick(cat, group)}
+                              onClick={(e) => { e.stopPropagation(); onCategoryClick(cat, group) }}
                               style={{
-                                fontSize: 10, padding: '1px 6px', borderRadius: 5,
-                                border: '1px solid var(--border)', background: 'var(--bg3)',
-                                color: 'var(--muted)', cursor: 'pointer', lineHeight: 1.6,
+                                fontSize: 11, padding: '2px 8px', borderRadius: 6,
+                                border: '1px solid var(--income)', background: '#3DDBD915',
+                                color: 'var(--income)', cursor: 'pointer', lineHeight: 1.6,
+                                fontWeight: 500,
                               }}
                             >
-                              פירוט
+                              פירוט ›
                             </button>
                           )}
                         </div>
