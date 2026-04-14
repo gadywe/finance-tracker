@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getGoals, setGoals } from '@/lib/sheets'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {

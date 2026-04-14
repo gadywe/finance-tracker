@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getBudget, getBudgetRaw } from '@/lib/sheets'
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {

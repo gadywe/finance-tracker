@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getIncomeJobs, addIncomeJob } from '@/lib/sheets'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
