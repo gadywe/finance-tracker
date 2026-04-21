@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { IncomeJob } from '@/lib/types'
 import { INCOME_TYPES, INCOME_OWNERS } from '@/lib/constants'
+import { logAction } from '@/lib/actionLog'
 
 interface Props {
   job?: IncomeJob
@@ -35,10 +36,27 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
     setError('')
     try {
       const body = { ...form, amount: Number(form.amount) }
-      const res = job
-        ? await fetch(`/api/income/${job.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        : await fetch('/api/income', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (!res.ok) throw new Error('שגיאה בשמירה')
+      if (job) {
+        // עריכה
+        const res = await fetch(`/api/income/${job.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error('שגיאה בשמירה')
+        logAction({
+          actionType: 'income_edit',
+          description: `${job.project} — ₪${job.amount}`,
+          entityId: job.id,
+          undoData: job,
+        })
+      } else {
+        // הוספה
+        const res = await fetch('/api/income', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error('שגיאה בשמירה')
+        const newJob: IncomeJob = await res.json()
+        logAction({
+          actionType: 'income_add',
+          description: `${body.project} — ₪${body.amount}`,
+          entityId: newJob.id,
+        })
+      }
       onSuccess()
       onClose()
     } catch {

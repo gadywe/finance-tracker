@@ -1,6 +1,6 @@
 'use client'
 
-export type Tab = 'summary' | 'income' | 'expenses'
+export type Tab = 'summary' | 'income' | 'expenses' | 'actions'
 
 interface Props {
   active: Tab

@@ -12,6 +12,7 @@ import OwnerProgress from './OwnerProgress'
 import GoalsModal from './GoalsModal'
 import IncomeSection from './IncomeSection'
 import ExpenseSection from './ExpenseSection'
+import ActionsSection from './ActionsSection'
 
 interface Props {
   activeTab: Tab
@@ -65,6 +66,10 @@ export default function Dashboard({ activeTab, incomeJobs, expenses, goals, onRe
 
       {activeTab === 'expenses' && (
         <ExpenseSection expenses={expenses} onRefresh={onRefresh} />
+      )}
+
+      {activeTab === 'actions' && (
+        <ActionsSection onRefresh={onRefresh} />
       )}
 
       {showGoals && (

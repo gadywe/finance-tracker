@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Expense, BudgetEntry } from '@/lib/types'
 import { BI_MONTHLY_PERIODS } from '@/lib/constants'
+import { logAction } from '@/lib/actionLog'
 import BudgetProgress from './BudgetProgress'
 import CategoryDrawer from './CategoryDrawer'
 import ExpenseForm from '@/components/expenses/ExpenseForm'
@@ -49,7 +50,16 @@ export default function ExpenseSection({ expenses, onRefresh }: Props) {
   const hasBudget = periodBudgetTotal > 0
 
   async function handleDelete(id: string) {
+    const deleted = expenses.find((e) => e.id === id)
     await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+    if (deleted) {
+      logAction({
+        actionType: 'expense_delete',
+        description: `${deleted.description || deleted.category} — ₪${deleted.amount}`,
+        entityId: id,
+        undoData: deleted,
+      })
+    }
     onRefresh()
   }
 

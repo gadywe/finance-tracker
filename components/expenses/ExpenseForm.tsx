@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Expense, BudgetEntry } from '@/lib/types'
 import { PAYMENT_METHODS } from '@/lib/constants'
+import { logAction } from '@/lib/actionLog'
 
 interface Props {
   expense?: Expense
@@ -76,10 +77,27 @@ export default function ExpenseForm({ expense, onSuccess, onClose }: Props) {
     setError('')
     try {
       const body = { ...form, amount: Number(form.amount) }
-      const res = expense
-        ? await fetch(`/api/expenses/${expense.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        : await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (!res.ok) throw new Error()
+      if (expense) {
+        // עריכה
+        const res = await fetch(`/api/expenses/${expense.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error()
+        logAction({
+          actionType: 'expense_edit',
+          description: `${expense.description || expense.category} — ₪${expense.amount}`,
+          entityId: expense.id,
+          undoData: expense,
+        })
+      } else {
+        // הוספה
+        const res = await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error()
+        const newExp: Expense = await res.json()
+        logAction({
+          actionType: 'expense_add',
+          description: `${body.description || body.category} — ₪${body.amount}`,
+          entityId: newExp.id,
+        })
+      }
       onSuccess()
       onClose()
     } catch {

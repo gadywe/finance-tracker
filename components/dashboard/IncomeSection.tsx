@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { IncomeJob, Goal } from '@/lib/types'
+import { logAction } from '@/lib/actionLog'
 import { ANNUAL_INCOME_GOAL } from '@/lib/constants'
 import ProgressRing from './ProgressRing'
 import TypeBreakdown from './TypeBreakdown'
@@ -66,7 +67,16 @@ export default function IncomeSection({ incomeJobs, goals, onRefresh }: Props) {
   const q2 = qData('Q2', [3, 4, 5])
 
   async function handleDelete(id: string) {
+    const deleted = incomeJobs.find((j) => j.id === id)
     await fetch(`/api/income/${id}`, { method: 'DELETE' })
+    if (deleted) {
+      logAction({
+        actionType: 'income_delete',
+        description: `${deleted.project} — ₪${deleted.amount}`,
+        entityId: id,
+        undoData: deleted,
+      })
+    }
     onRefresh()
   }
 

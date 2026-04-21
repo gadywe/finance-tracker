@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { IncomeJob, Expense, Goal } from '@/lib/types'
 import Dashboard from '@/components/dashboard/Dashboard'
 
-type Tab = 'summary' | 'income' | 'expenses'
+type Tab = 'summary' | 'income' | 'expenses' | 'actions'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'summary',  label: '📊 סיכום' },
-  { id: 'income',   label: '💰 הכנסות' },
-  { id: 'expenses', label: '💸 הוצאות' },
+  { id: 'summary',  label: '📊 סיכום'   },
+  { id: 'income',   label: '💰 הכנסות'  },
+  { id: 'expenses', label: '💸 הוצאות'  },
+  { id: 'actions',  label: '🔄 פעולות'  },
 ]
 
 export default function Home() {
