@@ -11,10 +11,26 @@ interface Props {
   onCategoryClick?: (category: string, group: string) => void
 }
 
-function ProgressBar({ ratio, height = 8 }: { ratio: number; height?: number }) {
+// צבע ייחודי לכל קבוצת תקציב
+const GROUP_COLORS: Record<string, string> = {
+  'בית':                               '#60A5FA', // כחול
+  'חסכונות, מיסים וביטוחים':           '#A78BFA', // סגול
+  'חינוך ותרבות':                       '#2DD4BF', // טורקיז
+  'בריאות וטיפוח':                      '#F472B6', // ורוד
+  'מינויים קבועים':                     '#FB923C', // כתום
+  'הוצאות עסק, מזומן ובלת"מ':          '#FBBF24', // ענבר
+  'חוץ':                               '#818CF8', // אינדיגו
+}
+const DEFAULT_GROUP_COLOR = '#94A3B8'
+
+function groupColor(group: string) {
+  return GROUP_COLORS[group.trim()] ?? DEFAULT_GROUP_COLOR
+}
+
+function ProgressBar({ ratio, height = 8, baseColor }: { ratio: number; height?: number; baseColor?: string }) {
   const isOver = ratio > 1
   const pct = Math.min(ratio * 100, 100)
-  const color = isOver ? '#FF5A5A' : ratio >= 0.8 ? '#FFD166' : '#06D6A0'
+  const color = isOver ? '#FF5A5A' : ratio >= 0.8 ? '#FFD166' : (baseColor ?? '#06D6A0')
   return (
     <div className="rounded-full" style={{ height, background: 'var(--border)' }}>
       <div
@@ -78,6 +94,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
         const groupRatio = groupBudgeted > 0 ? groupActual / groupBudgeted : 0
         const groupIsOver = groupActual > groupBudgeted
         const isOpen = !!expanded[group]
+        const gColor = groupColor(group)
 
         return (
           <div key={group}>
@@ -89,17 +106,17 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <span style={{
-                    color: 'var(--muted)', fontSize: 11, display: 'inline-block',
+                    color: gColor, fontSize: 11, display: 'inline-block',
                     transition: 'transform 0.2s', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
                   }}>▼</span>
-                  <span className="font-semibold text-sm">{group}</span>
+                  <span className="font-semibold text-sm" style={{ color: gColor }}>{group}</span>
                 </div>
                 <span style={{ fontSize: 13, color: groupIsOver ? '#FF5A5A' : 'var(--text)' }}>
                   ₪{groupActual.toLocaleString()} / ₪{groupBudgeted.toLocaleString()}
                   <span style={{ color: 'var(--muted)', marginRight: 6 }}>({Math.round(groupRatio * 100)}%)</span>
                 </span>
               </div>
-              <ProgressBar ratio={groupRatio} height={10} />
+              <ProgressBar ratio={groupRatio} height={10} baseColor={gColor} />
               {groupIsOver && (
                 <p style={{ fontSize: 11, color: '#FF5A5A', marginTop: 2, textAlign: 'right' }}>
                   חריגה של ₪{(groupActual - groupBudgeted).toLocaleString()}
@@ -109,7 +126,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
 
             {/* פירוט ביצוע מול תקציב לפי קטגוריה */}
             {isOpen && (
-              <div className="mt-2.5 pr-3 space-y-2.5" style={{ borderRight: '2px solid var(--border)' }}>
+              <div className="mt-2.5 pr-3 space-y-2.5" style={{ borderRight: `2px solid ${gColor}55` }}>
                 {groupEntries.map(({ category, amount: budgeted }) => {
                   const catActual = periodExpenses
                     .filter((e) => e.category.trim() === category.trim())
@@ -126,8 +143,8 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                               onClick={(e) => { e.stopPropagation(); onCategoryClick(category, group) }}
                               style={{
                                 fontSize: 11, padding: '2px 8px', borderRadius: 6,
-                                border: '1px solid var(--income)', background: '#3DDBD915',
-                                color: 'var(--income)', cursor: 'pointer', lineHeight: 1.6,
+                                border: `1px solid ${gColor}`, background: gColor + '15',
+                                color: gColor, cursor: 'pointer', lineHeight: 1.6,
                                 fontWeight: 500,
                               }}
                             >
@@ -140,7 +157,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                           <span style={{ marginRight: 4, opacity: 0.7 }}>({Math.round(catRatio * 100)}%)</span>
                         </span>
                       </div>
-                      <ProgressBar ratio={catRatio} height={5} />
+                      <ProgressBar ratio={catRatio} height={5} baseColor={gColor} />
                     </div>
                   )
                 })}
@@ -164,8 +181,8 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                               onClick={(e) => { e.stopPropagation(); onCategoryClick(cat, group) }}
                               style={{
                                 fontSize: 11, padding: '2px 8px', borderRadius: 6,
-                                border: '1px solid var(--income)', background: '#3DDBD915',
-                                color: 'var(--income)', cursor: 'pointer', lineHeight: 1.6,
+                                border: `1px solid ${gColor}`, background: gColor + '15',
+                                color: gColor, cursor: 'pointer', lineHeight: 1.6,
                                 fontWeight: 500,
                               }}
                             >
@@ -177,7 +194,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                           ₪{actual.toLocaleString()} / ללא תקציב
                         </span>
                       </div>
-                      <ProgressBar ratio={1} height={5} />
+                      <ProgressBar ratio={1} height={5} baseColor={gColor} />
                     </div>
                   ))
                 })()}
