@@ -135,20 +135,34 @@ export default function ActionsSection({ onRefresh }: Props) {
                   )}
                 </div>
 
-                {/* כפתור בטל */}
-                <button
-                  onClick={() => handleUndo(entry)}
-                  disabled={isUndoing}
-                  style={{
-                    flexShrink: 0, padding: '0.35rem 0.9rem', borderRadius: 8,
-                    border: `1px solid ${color}`, background: color + '15',
-                    color, fontSize: 12, fontWeight: 600,
-                    cursor: isUndoing ? 'not-allowed' : 'pointer',
-                    opacity: isUndoing ? 0.5 : 1, minHeight: 34,
-                  }}
-                >
-                  {isUndoing ? '...' : 'בטל'}
-                </button>
+                {/* כפתורים */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                  <button
+                    onClick={() => handleUndo(entry)}
+                    disabled={isUndoing}
+                    style={{
+                      padding: '0.35rem 0.9rem', borderRadius: 8,
+                      border: `1px solid ${color}`, background: color + '15',
+                      color, fontSize: 12, fontWeight: 600,
+                      cursor: isUndoing ? 'not-allowed' : 'pointer',
+                      opacity: isUndoing ? 0.5 : 1, minHeight: 34,
+                    }}
+                  >
+                    {isUndoing ? '...' : 'בטל'}
+                  </button>
+                  {hasError && (
+                    <button
+                      onClick={() => { removeActionEntry(entry.id); setLog(getActionLog()) }}
+                      style={{
+                        padding: '0.2rem 0.5rem', borderRadius: 6,
+                        border: '1px solid var(--border)', background: 'var(--bg3)',
+                        color: 'var(--muted)', fontSize: 11, cursor: 'pointer',
+                      }}
+                    >
+                      סגור
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}

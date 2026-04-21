@@ -266,7 +266,17 @@ export async function addExpense(expense: Omit<Expense, 'id'>): Promise<Expense>
   })
   const updatedRange = appendRes.data.updates?.updatedRange ?? ''
   const match = updatedRange.match(/(\d+)$/)
-  const rowNum = match ? parseInt(match[1], 10) : Date.now()
+  if (!match) {
+    // fallback: read sheet to find the row we just appended
+    const countRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${EXPENSES_SHEET}!A:A`,
+    })
+    const rowNum = (countRes.data.values?.length ?? 1)
+    revalidateTag('expenses', 'max')
+    return { id: `row-${rowNum}`, ...expense }
+  }
+  const rowNum = parseInt(match[1], 10)
   revalidateTag('expenses', 'max')
   return { id: `row-${rowNum}`, ...expense }
 }
@@ -297,8 +307,11 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
 }
 
 export async function deleteExpense(id: string): Promise<void> {
-  const sheets = await getSheets()
   const rowNum = rowNumFromId(id)
+  // שורות תקינות: 2 עד מיליון. ID לא-תקין (כמו row-1713456789000 מ-fallback ישן)
+  // מחזיר success ריק — השורה לא קיימת, מה שרצינו להשיג בכל מקרה
+  if (!Number.isInteger(rowNum) || rowNum < 2 || rowNum > 1_000_000) return
+  const sheets = await getSheets()
   await sheets.spreadsheets.values.clear({
     spreadsheetId: SPREADSHEET_ID,
     range: `${EXPENSES_SHEET}!A${rowNum}:G${rowNum}`,
