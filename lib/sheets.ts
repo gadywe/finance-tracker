@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import { unstable_cache, revalidateTag } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { IncomeJob, Expense, Goal, BudgetEntry } from './types'
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!
@@ -81,14 +81,10 @@ async function getIncomeFromHazana(): Promise<IncomeJob[]> {
     })
 }
 
-export const getIncomeJobs = unstable_cache(
-  async (): Promise<IncomeJob[]> => {
-    const [manual, fromHazana] = await Promise.all([getManualIncomeJobs(), getIncomeFromHazana()])
-    return [...manual, ...fromHazana]
-  },
-  ['income-jobs'],
-  { revalidate: 60, tags: ['income-jobs'] },
-)
+export async function getIncomeJobs(): Promise<IncomeJob[]> {
+  const [manual, fromHazana] = await Promise.all([getManualIncomeJobs(), getIncomeFromHazana()])
+  return [...manual, ...fromHazana]
+}
 
 export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJob> {
   const sheets = await getSheets()
@@ -217,42 +213,38 @@ export async function getExpensesRaw(): Promise<{ row: number; cols: Record<stri
     }))
 }
 
-export const getExpenses = unstable_cache(
-  async (year?: number, month?: number): Promise<Expense[]> => {
-    const sheets = await getSheets()
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${EXPENSES_SHEET}!A2:H`,
+export async function getExpenses(year?: number, month?: number): Promise<Expense[]> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${EXPENSES_SHEET}!A2:H`,
+  })
+  const rows = res.data.values ?? []
+  let expenses: Expense[] = rows
+    .filter((row) => row[0] && row[1] === 'הוצאה')
+    .map((row) => {
+      const sheetRowNum = rows.indexOf(row) + 2
+      return {
+        id: `row-${sheetRowNum}`,
+        date: row[0] ?? '',
+        category: row[3] ?? '',
+        group: row[4] ?? '',
+        description: row[5] ?? '',
+        amount: parseAmount(row[2]),
+        paymentMethod: (row[6] ?? 'מזומן') as Expense['paymentMethod'],
+      }
     })
-    const rows = res.data.values ?? []
-    let expenses: Expense[] = rows
-      .filter((row) => row[0] && row[1] === 'הוצאה')
-      .map((row) => {
-        const sheetRowNum = rows.indexOf(row) + 2
-        return {
-          id: `row-${sheetRowNum}`,
-          date: row[0] ?? '',
-          category: row[3] ?? '',
-          group: row[4] ?? '',
-          description: row[5] ?? '',
-          amount: parseAmount(row[2]),
-          paymentMethod: (row[6] ?? 'מזומן') as Expense['paymentMethod'],
-        }
-      })
-    if (year !== undefined) {
-      expenses = expenses.filter((e) => {
-        const d = new Date(e.date)
-        if (month !== undefined) {
-          return d.getFullYear() === year && d.getMonth() === month
-        }
-        return d.getFullYear() === year
-      })
-    }
-    return expenses
-  },
-  ['expenses'],
-  { revalidate: 60, tags: ['expenses'] },
-)
+  if (year !== undefined) {
+    expenses = expenses.filter((e) => {
+      const d = new Date(e.date)
+      if (month !== undefined) {
+        return d.getFullYear() === year && d.getMonth() === month
+      }
+      return d.getFullYear() === year
+    })
+  }
+  return expenses
+}
 
 export async function addExpense(expense: Omit<Expense, 'id'>): Promise<Expense> {
   const sheets = await getSheets()
@@ -325,26 +317,22 @@ export async function deleteExpense(id: string): Promise<void> {
 const VALID_OWNERS = ['גדי', 'שרון', 'כללי']
 const VALID_PERIODS = ['שנתי', 'Q1', 'Q2', 'Q3', 'Q4']
 
-export const getGoals = unstable_cache(
-  async (year: number): Promise<Goal[]> => {
-    const sheets = await getSheets()
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${GOALS_SHEET}!A2:D`,
-    })
-    const rows = res.data.values ?? []
-    return rows
-      .filter((r) => VALID_OWNERS.includes(r[0]) && VALID_PERIODS.includes(r[1]) && Number(r[2]) === year)
-      .map((r) => ({
-        owner: r[0] as Goal['owner'],
-        period: r[1] as Goal['period'],
-        year: Number(r[2]),
-        amount: Number(r[3]) || 0,
-      }))
-  },
-  ['goals'],
-  { revalidate: 60, tags: ['goals'] },
-)
+export async function getGoals(year: number): Promise<Goal[]> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${GOALS_SHEET}!A2:D`,
+  })
+  const rows = res.data.values ?? []
+  return rows
+    .filter((r) => VALID_OWNERS.includes(r[0]) && VALID_PERIODS.includes(r[1]) && Number(r[2]) === year)
+    .map((r) => ({
+      owner: r[0] as Goal['owner'],
+      period: r[1] as Goal['period'],
+      year: Number(r[2]),
+      amount: Number(r[3]) || 0,
+    }))
+}
 
 // שומר מערך יעדים — מעדכן שורות קיימות ומוסיף חדשות
 export async function setGoals(goals: Goal[]): Promise<void> {
@@ -406,28 +394,24 @@ export async function getBudgetRaw(): Promise<{ rowIndex: number; cells: string[
   return (res.data.values ?? []).map((row, i) => ({ rowIndex: i + 1, cells: row }))
 }
 
-export const getBudget = unstable_cache(
-  async (): Promise<BudgetEntry[]> => {
-    const sheets = await getSheets()
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${BUDGET_SHEET}!A2:H`,
+export async function getBudget(): Promise<BudgetEntry[]> {
+  const sheets = await getSheets()
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${BUDGET_SHEET}!A2:H`,
+  })
+  const rows = res.data.values ?? []
+  const entries: BudgetEntry[] = []
+  let currentGroup = ''
+  for (const row of rows) {
+    const category = row[0] ?? ''
+    const groupOrEmpty = row[1] ?? ''
+    if (groupOrEmpty) currentGroup = groupOrEmpty
+    if (!category) continue
+    BUDGET_PERIODS.forEach((period, i) => {
+      const amount = parseAmount(row[i + 2])
+      if (amount > 0) entries.push({ group: currentGroup, category, period, amount })
     })
-    const rows = res.data.values ?? []
-    const entries: BudgetEntry[] = []
-    let currentGroup = ''
-    for (const row of rows) {
-      const category = row[0] ?? ''
-      const groupOrEmpty = row[1] ?? ''
-      if (groupOrEmpty) currentGroup = groupOrEmpty
-      if (!category) continue
-      BUDGET_PERIODS.forEach((period, i) => {
-        const amount = parseAmount(row[i + 2])
-        if (amount > 0) entries.push({ group: currentGroup, category, period, amount })
-      })
-    }
-    return entries
-  },
-  ['budget'],
-  { revalidate: 300, tags: ['budget'] },
-)
+  }
+  return entries
+}
