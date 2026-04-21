@@ -150,6 +150,43 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
             </div>
           </div>
 
+          {/* קיצורי דרך לתאריך תשלום */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {([
+              {
+                label: 'מיידי',
+                calc: () => form.endDate || today(),
+              },
+              {
+                label: 'שוטף',
+                calc: () => {
+                  const base = form.endDate ? new Date(form.endDate) : new Date()
+                  return new Date(base.getFullYear(), base.getMonth() + 1, 1).toISOString().split('T')[0]
+                },
+              },
+              {
+                label: 'שוטף + 30',
+                calc: () => {
+                  const base = form.endDate ? new Date(form.endDate) : new Date()
+                  return new Date(base.getFullYear(), base.getMonth() + 2, 1).toISOString().split('T')[0]
+                },
+              },
+            ] as const).map(({ label, calc }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => set('payDate', calc())}
+                style={{
+                  flex: 1, padding: '0.35rem 0', borderRadius: 7,
+                  border: '1px solid var(--border)', background: 'var(--bg3)',
+                  color: 'var(--muted)', cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div>
             <label className="text-sm block mb-2" style={{ color: 'var(--muted)' }}>סטטוס</label>
             <div className="flex gap-2">
