@@ -134,18 +134,32 @@ async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Prom
 export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): Promise<void> {
   if (id.startsWith('hazana-')) return updateHazanaIncome(id, updates)
   const sheets = await getSheets()
-  const jobs = await getManualIncomeJobs()
-  const index = jobs.findIndex((j) => j.id === id)
-  if (index === -1) throw new Error(`Income job ${id} not found`)
-  const existing = jobs[index]
-  const merged = { ...existing, ...updates }
-  const row = [merged.id, merged.project, merged.type, merged.amount, merged.endDate, merged.payDate, merged.status, merged.note, merged.owner ?? 'כללי']
-  const rowNum = index + 2 // +1 for header, +1 for 1-based index
+  // קורא את כל השורות הגולמיות ומחפש לפי ID — כך עמודות ריקות/נמחקות לא משבשות את חישוב מספר השורה
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${INCOME_SHEET}!A2:I`,
+  })
+  const rows = res.data.values ?? []
+  const rowIndex = rows.findIndex((row) => row[0] === id)
+  if (rowIndex === -1) throw new Error(`Income job ${id} not found`)
+  const r = rows[rowIndex]
+  const rowNum = rowIndex + 2 // +1 for 0-based index, +1 for header row
+  const merged = {
+    id:      r[0] ?? id,
+    project: updates.project  ?? r[1] ?? '',
+    type:    updates.type     ?? r[2] ?? '',
+    amount:  updates.amount   ?? (Number(r[3]) || 0),
+    endDate: updates.endDate  ?? r[4] ?? '',
+    payDate: updates.payDate  ?? r[5] ?? '',
+    status:  updates.status   ?? r[6] ?? 'expected',
+    note:    updates.note     ?? r[7] ?? '',
+    owner:   updates.owner    ?? r[8] ?? 'כללי',
+  }
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `${INCOME_SHEET}!A${rowNum}:I${rowNum}`,
     valueInputOption: 'RAW',
-    requestBody: { values: [row] },
+    requestBody: { values: [[merged.id, merged.project, merged.type, merged.amount, merged.endDate, merged.payDate, merged.status, merged.note, merged.owner]] },
   })
   revalidateTag('income-jobs', 'max')
 }
@@ -153,11 +167,15 @@ export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): 
 export async function deleteIncomeJob(id: string): Promise<void> {
   if (id.startsWith('hazana-')) throw new Error('Cannot delete auto-imported income rows')
   const sheets = await getSheets()
-  const jobs = await getManualIncomeJobs()
-  const index = jobs.findIndex((j) => j.id === id)
-  if (index === -1) throw new Error(`Income job ${id} not found`)
-  const rowNum = index + 2
-  // מחיקה ע"י ניקוי השורה
+  // חיפוש לפי ID בנתונים הגולמיים — לא לפי אינדקס מסונן
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${INCOME_SHEET}!A2:I`,
+  })
+  const rows = res.data.values ?? []
+  const rowIndex = rows.findIndex((row) => row[0] === id)
+  if (rowIndex === -1) throw new Error(`Income job ${id} not found`)
+  const rowNum = rowIndex + 2
   await sheets.spreadsheets.values.clear({
     spreadsheetId: SPREADSHEET_ID,
     range: `${INCOME_SHEET}!A${rowNum}:I${rowNum}`,
