@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         range: 'הכנסות!A1:I',
       })
       const rows = res.data.values ?? []
-      return NextResponse.json({ totalRows: rows.length, last10: rows.slice(-10) })
+      return NextResponse.json({ totalRows: rows.length, first5: rows.slice(0, 5), last10: rows.slice(-10) })
     } catch (error) {
       return NextResponse.json({ error: String(error) }, { status: 500 })
     }
