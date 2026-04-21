@@ -100,7 +100,7 @@ export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJo
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
-  revalidateTag('income-jobs', 'max')
+  revalidateTag('income-jobs', { expire: 0 })
   return { id, ...job }
 }
 
@@ -128,7 +128,7 @@ async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Prom
     valueInputOption: 'RAW',
     requestBody: { values: [[newOwner]] },
   })
-  revalidateTag('income-jobs', 'max')
+  revalidateTag('income-jobs', { expire: 0 })
 }
 
 export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): Promise<void> {
@@ -161,7 +161,7 @@ export async function updateIncomeJob(id: string, updates: Partial<IncomeJob>): 
     valueInputOption: 'RAW',
     requestBody: { values: [[merged.id, merged.project, merged.type, merged.amount, merged.endDate, merged.payDate, merged.status, merged.note, merged.owner]] },
   })
-  revalidateTag('income-jobs', 'max')
+  revalidateTag('income-jobs', { expire: 0 })
 }
 
 export async function deleteIncomeJob(id: string): Promise<void> {
@@ -180,7 +180,7 @@ export async function deleteIncomeJob(id: string): Promise<void> {
     spreadsheetId: SPREADSHEET_ID,
     range: `${INCOME_SHEET}!A${rowNum}:I${rowNum}`,
   })
-  revalidateTag('income-jobs', 'max')
+  revalidateTag('income-jobs', { expire: 0 })
 }
 
 // ─── הוצאות ───────────────────────────────────────────────
@@ -273,11 +273,11 @@ export async function addExpense(expense: Omit<Expense, 'id'>): Promise<Expense>
       range: `${EXPENSES_SHEET}!A:A`,
     })
     const rowNum = (countRes.data.values?.length ?? 1)
-    revalidateTag('expenses', 'max')
+    revalidateTag('expenses', { expire: 0 })
     return { id: `row-${rowNum}`, ...expense }
   }
   const rowNum = parseInt(match[1], 10)
-  revalidateTag('expenses', 'max')
+  revalidateTag('expenses', { expire: 0 })
   return { id: `row-${rowNum}`, ...expense }
 }
 
@@ -303,7 +303,7 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
     valueInputOption: 'RAW',
     requestBody: { values: [[merged.date, 'הוצאה', merged.amount, merged.category, merged.group, merged.description, merged.paymentMethod]] },
   })
-  revalidateTag('expenses', 'max')
+  revalidateTag('expenses', { expire: 0 })
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -316,7 +316,7 @@ export async function deleteExpense(id: string): Promise<void> {
     spreadsheetId: SPREADSHEET_ID,
     range: `${EXPENSES_SHEET}!A${rowNum}:G${rowNum}`,
   })
-  revalidateTag('expenses', 'max')
+  revalidateTag('expenses', { expire: 0 })
 }
 
 // ─── יעדים ───────────────────────────────────────────────
@@ -388,7 +388,7 @@ export async function setGoals(goals: Goal[]): Promise<void> {
       requestBody: { values: appends },
     })
   }
-  revalidateTag('goals', 'max')
+  revalidateTag('goals', { expire: 0 })
 }
 
 // ─── תכנון (תקציב דו-חודשי) ──────────────────────────────
