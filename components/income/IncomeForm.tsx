@@ -83,8 +83,13 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-sm" style={{ color: 'var(--muted)' }}>שם פרויקט / לקוח</label>
-            <input style={inputStyle} value={form.project} onChange={(e) => set('project', e.target.value)} placeholder="שם הפרויקט" />
+            <label className="text-sm" style={{ color: 'var(--muted)' }}>לקוח</label>
+            <input style={inputStyle} value={form.project} onChange={(e) => set('project', e.target.value)} placeholder="שם הלקוח..." />
+          </div>
+
+          <div>
+            <label className="text-sm" style={{ color: 'var(--muted)' }}>פרטים <span style={{ opacity: 0.5 }}>(אופציונלי)</span></label>
+            <input style={inputStyle} value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="תיאור העבודה, פרטים נוספים..." />
           </div>
 
           <div>
@@ -158,12 +163,7 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
             </div>
           </div>
 
-          <div>
-            <label className="text-sm" style={{ color: 'var(--muted)' }}>הערה (אופציונלי)</label>
-            <input style={inputStyle} value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="הערה..." />
-          </div>
-
-          {error && <p className="text-sm" style={{ color: 'var(--expense)' }}>{error}</p>}
+          {error &&<p className="text-sm" style={{ color: 'var(--expense)' }}>{error}</p>}
 
           <div className="flex gap-2 pt-2">
             <button
