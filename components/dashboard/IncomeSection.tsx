@@ -31,11 +31,11 @@ function sortJobs(jobs: IncomeJob[], by: SortKey): IncomeJob[] {
       return new Date(b.payDate || b.endDate).getTime() - new Date(a.payDate || a.endDate).getTime()
     }
     if (by === 'status') {
-      // ממתין לתשלום → צפוי → שולם, בכל קבוצה לפי payDate עולה
+      // ממתין לתשלום → צפוי → שולם, בכל קבוצה לפי payDate יורד (חדש ראשון)
       const order = { pending: 0, expected: 1, paid: 2 }
       const diff = (order[a.status] ?? 1) - (order[b.status] ?? 1)
       if (diff !== 0) return diff
-      return new Date(a.payDate || a.endDate).getTime() - new Date(b.payDate || b.endDate).getTime()
+      return new Date(b.payDate || b.endDate).getTime() - new Date(a.payDate || a.endDate).getTime()
     }
     // name: alphabetical by project
     return a.project.localeCompare(b.project, 'he')
