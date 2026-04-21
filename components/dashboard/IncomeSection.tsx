@@ -15,10 +15,35 @@ interface Props {
   onRefresh: () => void
 }
 
+type SortKey = 'date' | 'status' | 'name'
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'date',   label: 'תאריך' },
+  { key: 'status', label: 'סטטוס' },
+  { key: 'name',   label: 'שם לקוח' },
+]
+
+function sortJobs(jobs: IncomeJob[], by: SortKey): IncomeJob[] {
+  return [...jobs].sort((a, b) => {
+    if (by === 'date') {
+      // newest payDate first; fall back to endDate
+      return new Date(b.payDate || b.endDate).getTime() - new Date(a.payDate || a.endDate).getTime()
+    }
+    if (by === 'status') {
+      // expected (not paid) first, then by payDate ascending
+      if (a.status !== b.status) return a.status === 'expected' ? -1 : 1
+      return new Date(a.payDate || a.endDate).getTime() - new Date(b.payDate || b.endDate).getTime()
+    }
+    // name: alphabetical by project
+    return a.project.localeCompare(b.project, 'he')
+  })
+}
+
 export default function IncomeSection({ incomeJobs, goals, onRefresh }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editJob, setEditJob] = useState<IncomeJob | undefined>()
   const [hazanaEditJob, setHazanaEditJob] = useState<IncomeJob | undefined>()
+  const [sortBy, setSortBy] = useState<SortKey>('date')
 
   const total = incomeJobs.reduce((s, j) => s + j.amount, 0)
   const paid = incomeJobs.filter((j) => j.status === 'paid').reduce((s, j) => s + j.amount, 0)
@@ -105,22 +130,48 @@ export default function IncomeSection({ incomeJobs, goals, onRefresh }: Props) {
       {/* פירוט לפי סוג */}
       <TypeBreakdown incomeJobs={incomeJobs} onEdit={openEdit} onEditHazana={setHazanaEditJob} />
 
-      {/* רשימה + כפתור הוספה */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">כל העבודות ({incomeJobs.length})</h3>
-        <button
-          onClick={() => { setEditJob(undefined); setShowForm(true) }}
-          style={{
-            background: 'var(--income)', color: '#000', border: 'none',
-            borderRadius: 10, padding: '0.5rem 1.25rem', fontWeight: 700,
-            cursor: 'pointer', minHeight: 44, fontSize: 14,
-          }}
-        >
-          + עבודה חדשה
-        </button>
+      {/* רשימה + כפתור הוספה + מיון */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">כל העבודות ({incomeJobs.length})</h3>
+          <button
+            onClick={() => { setEditJob(undefined); setShowForm(true) }}
+            style={{
+              background: 'var(--income)', color: '#000', border: 'none',
+              borderRadius: 10, padding: '0.5rem 1.25rem', fontWeight: 700,
+              cursor: 'pointer', minHeight: 44, fontSize: 14,
+            }}
+          >
+            + עבודה חדשה
+          </button>
+        </div>
+
+        {/* בורר מיון */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>מיון:</span>
+          {SORT_OPTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setSortBy(key)}
+              style={{
+                fontSize: 12,
+                padding: '4px 12px',
+                borderRadius: 8,
+                border: `1px solid ${sortBy === key ? 'var(--income)' : 'var(--border)'}`,
+                background: sortBy === key ? '#3DDBD922' : 'var(--bg3)',
+                color: sortBy === key ? 'var(--income)' : 'var(--muted)',
+                fontWeight: sortBy === key ? 600 : 400,
+                cursor: 'pointer',
+                minHeight: 32,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <IncomeList jobs={incomeJobs} onEdit={openEdit} onEditHazana={setHazanaEditJob} onDelete={handleDelete} />
+      <IncomeList jobs={sortJobs(incomeJobs, sortBy)} onEdit={openEdit} onEditHazana={setHazanaEditJob} onDelete={handleDelete} />
 
       {showForm && (
         <IncomeForm
