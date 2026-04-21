@@ -101,7 +101,42 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
 
           <div>
             <label className="text-sm" style={{ color: 'var(--muted)' }}>סכום (₪)</label>
-            <input style={inputStyle} type="number" min="0" value={form.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input style={{ ...inputStyle, flex: 1 }} type="number" min="0" value={form.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" />
+              <button
+                type="button"
+                onClick={() => {
+                  const base = Number(form.amount)
+                  if (base > 0) set('amount', String(Math.round(base * 1.18 * 100) / 100))
+                }}
+                title="הוסף מע״מ 18%"
+                style={{
+                  padding: '0.6rem 0.75rem', borderRadius: 8, border: '1px solid var(--border)',
+                  background: 'var(--bg3)', color: 'var(--muted)', cursor: 'pointer',
+                  fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                + מע״מ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const total = Number(form.amount)
+                  if (total > 0) set('amount', String(Math.round((total / 1.18) * 100) / 100))
+                }}
+                title="חלץ מחיר ללא מע״מ (כולל מע״מ)"
+                style={{
+                  padding: '0.6rem 0.75rem', borderRadius: 8, border: '1px solid var(--border)',
+                  background: 'var(--bg3)', color: 'var(--muted)', cursor: 'pointer',
+                  fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                כולל מע״מ
+              </button>
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+              מע״מ נוכחי: 18% | + מע״מ: מוסיף 18% לסכום | כולל מע״מ: מחשב בסיס ללא מע״מ
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

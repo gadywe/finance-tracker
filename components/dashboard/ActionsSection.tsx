@@ -42,7 +42,23 @@ export default function ActionsSection({ onRefresh }: Props) {
 
       if (actionType.endsWith('_add')) {
         // ביטול הוספה → מחיקה
+        // אם המחיקה נכשלת, בודקים אם הפריט עדיין קיים.
+        // אם לא קיים — המצב הרצוי הושג ומסמנים הצלחה.
         res = await fetch(`/api/${domain}/${entityId}`, { method: 'DELETE' })
+        if (!res.ok) {
+          const listRes = await fetch(`/api/${domain}`)
+          if (listRes.ok) {
+            const items: { id: string }[] = await listRes.json()
+            if (Array.isArray(items) && !items.some((it) => it.id === entityId)) {
+              // הפריט כבר לא קיים — הביטול הצליח בפועל
+              removeActionEntry(entry.id)
+              setLog(getActionLog())
+              onRefresh()
+              return
+            }
+          }
+          throw new Error()
+        }
 
       } else if (actionType.endsWith('_edit')) {
         // ביטול עריכה → שחזור ערכים קודמים
