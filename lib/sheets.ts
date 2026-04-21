@@ -86,18 +86,32 @@ export async function getIncomeJobs(): Promise<IncomeJob[]> {
   return [...manual, ...fromHazana]
 }
 
-export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJob & { _debug?: unknown }> {
+export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJob> {
   const sheets = await getSheets()
   const id = String(Date.now())
   const row = [id, job.project, job.type, job.amount, job.endDate, job.payDate, job.status, job.note, job.owner ?? 'כללי']
-  const appendRes = await sheets.spreadsheets.values.append({
+
+  // לא להשתמש ב-append כי שורות ריקות בין נתונים מבלבלות את ה-API —
+  // הוא כותב לעמודה הלא-נכונה. במקום זאת: מוצאים את השורה הריקה הבאה בעמודה A.
+  const colARes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${INCOME_SHEET}!A:I`,
+    range: `${INCOME_SHEET}!A:A`,
+  })
+  const colA = colARes.data.values ?? []
+  let lastDataRow = 0
+  for (let i = colA.length - 1; i >= 0; i--) {
+    if (colA[i]?.[0]) { lastDataRow = i + 1; break }
+  }
+  const targetRow = lastDataRow + 1
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${INCOME_SHEET}!A${targetRow}:I${targetRow}`,
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
   revalidateTag('income-jobs', { expire: 0 })
-  return { id, ...job, _debug: { updatedRange: appendRes.data.updates?.updatedRange, spreadsheetId: appendRes.data.spreadsheetId } }
+  return { id, ...job }
 }
 
 async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Promise<void> {
