@@ -5,7 +5,7 @@ export interface IncomeJob {
   amount: number
   endDate: string      // YYYY-MM-DD
   payDate: string      // YYYY-MM-DD
-  status: 'paid' | 'expected'
+  status: 'paid' | 'expected' | 'pending'
   note: string
   owner: 'גדי' | 'שרון' | 'כללי'
 }

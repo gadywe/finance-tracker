@@ -39,11 +39,11 @@ export default function IncomeList({ jobs, onEdit, onEditHazana, onDelete }: Pro
                 <span
                   className="text-xs px-2 py-0.5 rounded-full"
                   style={{
-                    background: job.status === 'paid' ? '#06D6A022' : '#FFD16622',
-                    color: job.status === 'paid' ? 'var(--profit)' : 'var(--warning)',
+                    background: job.status === 'paid' ? '#06D6A022' : job.status === 'pending' ? '#FB923C22' : '#FFD16622',
+                    color:      job.status === 'paid' ? '#06D6A0'   : job.status === 'pending' ? '#FB923C'   : '#FFD166',
                   }}
                 >
-                  {job.status === 'paid' ? '✓ שולם' : '⏳ צפוי'}
+                  {job.status === 'paid' ? '✓ שולם' : job.status === 'pending' ? '🔔 ממתין לתשלום' : '⏳ צפוי'}
                 </span>
                 {ownerInfo && job.owner !== 'כללי' && (
                   <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: ownerInfo.color + '22', color: ownerInfo.color }}>
@@ -62,7 +62,7 @@ export default function IncomeList({ jobs, onEdit, onEditHazana, onDelete }: Pro
               </div>
             </div>
             <div className="text-left flex-shrink-0">
-              <p className="font-bold text-lg" style={{ color: job.status === 'paid' ? 'var(--profit)' : 'var(--warning)' }}>
+              <p className="font-bold text-lg" style={{ color: job.status === 'paid' ? '#06D6A0' : job.status === 'pending' ? '#FB923C' : '#FFD166' }}>
                 ₪{job.amount.toLocaleString()}
               </p>
             </div>

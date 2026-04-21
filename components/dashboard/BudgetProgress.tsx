@@ -137,7 +137,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                     <div key={category}>
                       <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ color: 'var(--muted)' }}>{category}</span>
+                          <span style={{ color: 'var(--text)' }}>{category}</span>
                           {catActual > 0 && onCategoryClick && (
                             <button
                               onClick={(e) => { e.stopPropagation(); onCategoryClick(category, group) }}
@@ -175,7 +175,7 @@ export default function BudgetProgress({ expenses, budget, period, onCategoryCli
                     <div key={cat}>
                       <div className="flex justify-between items-center mb-1" style={{ fontSize: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ color: 'var(--muted)' }}>{cat}</span>
+                          <span style={{ color: 'var(--text)' }}>{cat}</span>
                           {onCategoryClick && (
                             <button
                               onClick={(e) => { e.stopPropagation(); onCategoryClick(cat, group) }}

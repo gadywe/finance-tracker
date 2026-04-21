@@ -95,20 +95,24 @@ export default function IncomeForm({ job, onSuccess, onClose }: Props) {
           <div>
             <label className="text-sm block mb-2" style={{ color: 'var(--muted)' }}>סטטוס</label>
             <div className="flex gap-2">
-              {(['expected', 'paid'] as const).map((s) => (
+              {([
+                { value: 'expected', label: '⏳ צפוי',             bg: '#FFD166', dark: true  },
+                { value: 'pending',  label: '🔔 ממתין לתשלום',     bg: '#FB923C', dark: true  },
+                { value: 'paid',     label: '✓ שולם',              bg: '#06D6A0', dark: true  },
+              ] as const).map(({ value, label, bg }) => (
                 <button
-                  key={s} type="button"
-                  onClick={() => set('status', s)}
+                  key={value} type="button"
+                  onClick={() => set('status', value)}
                   style={{
                     flex: 1, padding: '0.5rem',
-                    borderRadius: 8, border: '1px solid var(--border)',
-                    background: form.status === s ? (s === 'paid' ? 'var(--profit)' : 'var(--warning)') : 'var(--bg3)',
-                    color: form.status === s ? '#000' : 'var(--text)',
-                    cursor: 'pointer', fontWeight: form.status === s ? 600 : 400,
-                    minHeight: 44,
+                    borderRadius: 8, border: `1px solid ${form.status === value ? bg : 'var(--border)'}`,
+                    background: form.status === value ? bg + '33' : 'var(--bg3)',
+                    color: form.status === value ? bg : 'var(--text)',
+                    cursor: 'pointer', fontWeight: form.status === value ? 700 : 400,
+                    minHeight: 44, fontSize: 13,
                   }}
                 >
-                  {s === 'paid' ? '✓ שולם' : '⏳ צפוי'}
+                  {label}
                 </button>
               ))}
             </div>
