@@ -86,18 +86,18 @@ export async function getIncomeJobs(): Promise<IncomeJob[]> {
   return [...manual, ...fromHazana]
 }
 
-export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJob> {
+export async function addIncomeJob(job: Omit<IncomeJob, 'id'>): Promise<IncomeJob & { _debug?: unknown }> {
   const sheets = await getSheets()
   const id = String(Date.now())
   const row = [id, job.project, job.type, job.amount, job.endDate, job.payDate, job.status, job.note, job.owner ?? 'כללי']
-  await sheets.spreadsheets.values.append({
+  const appendRes = await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
     range: `${INCOME_SHEET}!A:I`,
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   })
   revalidateTag('income-jobs', { expire: 0 })
-  return { id, ...job }
+  return { id, ...job, _debug: { updatedRange: appendRes.data.updates?.updatedRange, spreadsheetId: appendRes.data.spreadsheetId } }
 }
 
 async function updateHazanaIncome(id: string, updates: Partial<IncomeJob>): Promise<void> {
